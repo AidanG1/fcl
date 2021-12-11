@@ -1,26 +1,33 @@
 from fastapi import FastAPI, APIRouter, HTTPException, status
 from pydantic import BaseModel
 from typing import List, Optional
-from deta import Deta
-import os, requests
+from deta import Deta, App
+import os
+import requests
 from datetime import datetime
 from dotenv import load_dotenv
 
 
 load_dotenv()
-db_key = os.getenv("DB_KEY")
-db_prefix = os.getenv("DB_PREFIX")
+project_key = os.getenv("PROJECT_KEY")
+if os.getenv('DETA_RUNTIME') == 'true':
+    db_prefix = 'fcl_prod_'
+else:
+    db_prefix = 'fcl_dev_'
 
-app = FastAPI()
+app = App(FastAPI())
+
+# deta update -e .env
+# deta cron set "10 minutes"
 
 
 @app.lib.cron()
 def cron_job(event):
-    deta = Deta(db_key)
+    deta = Deta(project_key)
     db = deta.Base(db_prefix+'players')
     players = db.fetch().items
     for player in players:
-        r = requests.get() # hit the chess.com api and then the lichess api
+        r = requests.get()  # hit the chess.com api and then the lichess api
         # scrape the fide website for ratings or maybe chess.com/players
         # eventually go for finding fide games
         # then make a new rating_day
@@ -28,13 +35,14 @@ def cron_job(event):
 
     return "this is not done"
 
+
 class Player(BaseModel):
     id: int
     name: str
     title: str
     fide_id: str
     lichess_username: Optional[str] = None
-    chess_com_player_username: Optional[str] = None 
+    chess_com_player_username: Optional[str] = None
     chess_com_username: Optional[str] = None
     youtube_channel: Optional[str] = None
     twitch_channel: Optional[str] = None
@@ -85,7 +93,7 @@ async def read_root():
 
 @router.get("/players/{player_id}", response_model=Player, tags=["database"])
 async def read_user_by_id(player_id: str):
-    deta = Deta(db_key)
+    deta = Deta(project_key)
     db = deta.Base(db_prefix+'players')
     try:
         player = db.get(key=player_id)
