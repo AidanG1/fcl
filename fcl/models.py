@@ -5,8 +5,8 @@ import datetime
 
 class Player(BaseModel):
     name: str  # Magnus Carlsen
-    title_full: str  # GM
-    title_abbreviated: str  # Grandmaster
+    title_full: Optional[str] = ''  # Grandmaster
+    title_abbreviated: Optional[str] = ''  # GM
     # https://ratings.fide.com/profile/1503014
     fide_id: str
     # https://lichess.org/@/DrNykterstein
@@ -50,6 +50,10 @@ class Rating_week(BaseModel):  # https://www.chess.com/games/daniel-naroditsky
     rapid_openings: List[Opening]
     blitz_openings: List[Opening]
     bullet_openings: List[Opening]
+    youtube_subs: int
+    youtube_views: int
+    twitch_average_viewers: int # https://twitchstats.net/streamer/magnuscarlsentv
+    twitch_total_viewers: int
     # https://lichess.org/api#operation/apiGamesUser
 
 
@@ -68,6 +72,7 @@ class League(BaseModel):
     blitz_multiplier: float = 3
     bullet_multiplier: float = 1
     opening_bonus_multiplier: float = 2
+
 
 
 class Team(BaseModel):

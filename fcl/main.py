@@ -5,6 +5,7 @@ import os
 import requests
 from datetime import datetime
 from dotenv import load_dotenv
+from .routers import players
 
 
 load_dotenv()
@@ -14,8 +15,9 @@ if os.getenv('DETA_RUNTIME') == 'true':
 else:
     db_prefix = 'fcl_dev_'
 
-app = App(FastAPI())
-
+app = FastAPI()
+app.include_router(players)
+app = App(app)
 # deta update -e .env
 # deta cron set "10 minutes"
 
