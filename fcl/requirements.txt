@@ -2,3 +2,4 @@ fastapi
 python-dotenv
 pydantic
 requests
+beautifulsoup4

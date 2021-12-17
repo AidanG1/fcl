@@ -41,19 +41,20 @@ class Rating_week(BaseModel):  # https://www.chess.com/games/daniel-naroditsky
     fide_classical: int
     fide_rapid: int
     fide_blitz: int
-    lichess_ratings: List[int]  # classical, rapid, blitz, bullet
-    chess_com_ratings: List[int]  # classical, rapid, blitz, bullet
-    fide_games_played: List[int]  # classical, rapid, blitz
-    lichess_games_played: List[int]  # classical, rapid, blitz, bullet
-    chess_com_games_played: List[int]  # classical, rapid, blitz, bullet
-    classical_openings: List[Opening]
-    rapid_openings: List[Opening]
-    blitz_openings: List[Opening]
-    bullet_openings: List[Opening]
-    youtube_subs: int
-    youtube_views: int
-    twitch_average_viewers: int # https://twitchstats.net/streamer/magnuscarlsentv
-    twitch_total_viewers: int
+    lichess_ratings: List[int] = []  # classical, rapid, blitz, bullet
+    chess_com_ratings: List[int] = []  # classical, rapid, blitz, bullet
+    fide_games_played: List[int] = []  # classical, rapid, blitz
+    lichess_games_played: List[int] = []  # classical, rapid, blitz, bullet
+    chess_com_games_played: List[int] = []  # classical, rapid, blitz, bullet
+    classical_openings: List[Opening] = []
+    rapid_openings: List[Opening] = []
+    blitz_openings: List[Opening] = []
+    bullet_openings: List[Opening] = []
+    youtube_subs: Optional[int]
+    youtube_views: Optional[int]
+    # https://twitchstats.net/streamer/magnuscarlsentv
+    twitch_average_viewers: Optional[int]
+    twitch_total_viewers: Optional[int]
     # https://lichess.org/api#operation/apiGamesUser
 
 
@@ -72,7 +73,6 @@ class League(BaseModel):
     blitz_multiplier: float = 3
     bullet_multiplier: float = 1
     opening_bonus_multiplier: float = 2
-
 
 
 class Team(BaseModel):

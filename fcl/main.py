@@ -1,6 +1,7 @@
 from fastapi import FastAPI, APIRouter, HTTPException, status
 from deta import Deta, App
 from models import *
+from bs4 import BeautifulSoup
 import os
 import requests
 from datetime import datetime
@@ -22,19 +23,64 @@ app = App(app)
 # deta cron set "10 minutes"
 
 
+def create_update_rating_week(players):
+    """
+    Inputs: a list of player models
+    Creates or updates a player week based on the current player and the date. 
+    If there is an already existing player week for the current date period, 
+    it updates. Otherwise, create a new one.
+    """
+    deta = Deta(project_key)
+    db = deta.Base(db_prefix+'rating_weeks')
+    # hit the chess.com api and then the lichess api
+    # scrape the fide website for ratings or maybe chess.com/players
+    # eventually go for finding fide games
+    # then make a new rating_day
+    # also scrape from the youtube api and from a twitch api to get that data
+    for player in players:
+        # first get the required fide ratings to initialized a
+        r = requests.get(
+            f'https://ratings.fide.com/profile/{player.fide_id}').text
+        soup = BeautifulSoup(r)
+        classical_rating = int(
+            soup.find(class_='profile-top-rating-data_gray').text[3:])  # std 2669
+        rapid_rating = int(
+            soup.find(class_='profile-top-rating-data_red').text[6:])  # rapid 2669
+        blitz_rating = int(
+            soup.find(class_='profile-top-rating-data_blue').text[6:])  # blitz 2669
+        # next check if there is a week in progress
+        week = db.fetch(
+            [{"end_day?gte": datetime.date.today()}, {"player": player}]).items
+        # if there is not a week in progress, create one
+        if len(week) == 0:
+            previous_weeks = db.fetch({"player": player}).items
+            if len(previous_weeks) == 0:
+                week = db.put(Rating_week())
+            else:
+                previous_week = sorted(
+                    previous_weeks, key=lambda x: x.week_number, reverse=True)[0]
+                week = db.put(Rating_week(
+                    player=player,
+                    week_number=previous_week.week_number + 1,
+                    start_day = previous_week.start_day + datetime.timedelta(days=7),
+                    end_day = previous_week.end_day + datetime.timedelta(days=7),
+                    fide_classical = classical_rating,
+                    fide_rapid = rapid_rating,
+                    fide_blitz = blitz_rating,
+                ))
+        else:
+            week = week[0]
+        if not isinstance(player.lichess_username, type(None)):
+            r = requests.get()
+
+
 @app.lib.cron()
 def cron_job(event):
     deta = Deta(project_key)
     db = deta.Base(db_prefix+'players')
     players = db.fetch().items
-    for player in players:
-        r = requests.get()  # hit the chess.com api and then the lichess api
-        # scrape the fide website for ratings or maybe chess.com/players
-        # eventually go for finding fide games
-        # then make a new rating_day
-        # also scrape from the youtube api and from a twitch api to get that data
-
-    return "this is not done"
+    create_update_rating_week(players)
+    return f"Rating weeks created or updated for {len(players)} players"
 
 
 router = APIRouter()
