@@ -4,7 +4,8 @@ from models import *
 from bs4 import BeautifulSoup
 import os
 import requests
-from datetime import datetime
+import berserk
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from .routers import players
 
@@ -52,18 +53,17 @@ def create_update_rating_week(players):
         week = db.fetch(
             [{"end_day?gte": datetime.date.today()}, {"player": player}]).items
         # if there is not a week in progress, create one
+        today = datetime.date.today()
         if len(week) == 0:
             previous_weeks = db.fetch({"player": player}).items
             if len(previous_weeks) == 0:
-                today = datetime.date.today()
                 # all weeks start on Mondays
-                start_day = today + \
-                    datetime.timedelta(days=-today.weekday(), weeks=1)
+                start_day = today + timedelta(days=-today.weekday(), weeks=1)
                 week = db.put(Rating_week(
                     player=player,
                     week_number=0,  # weeks start at 0
                     start_day=start_day,
-                    end_day=start_day + datetime.timedelta(days=7),
+                    end_day=start_day + timedelta(days=7),
                     fide_classical=classical_rating,
                     fide_rapid=rapid_rating,
                     fide_blitz=blitz_rating,
@@ -74,9 +74,8 @@ def create_update_rating_week(players):
                 week = db.put(Rating_week(
                     player=player,
                     week_number=previous_week.week_number + 1,
-                    start_day=previous_week.start_day +
-                    datetime.timedelta(days=7),
-                    end_day=previous_week.end_day + datetime.timedelta(days=7),
+                    start_day=previous_week.start_day + timedelta(days=7),
+                    end_day=previous_week.end_day + timedelta(days=7),
                     fide_classical=classical_rating,
                     fide_rapid=rapid_rating,
                     fide_blitz=blitz_rating,
@@ -85,7 +84,12 @@ def create_update_rating_week(players):
             week = week[0]
         # requests to lichess, chess, twitch, and youtube
         if not isinstance(player.lichess_username, type(None)):
-            r = requests.get()
+            session = berserk.TokenSession(os.getenv('LICHESS_API_TOKEN'))
+            client = berserk.Client(session=session)
+            start = berserk.utils.to_millis(datetime(today-timedelta(days=1)))
+            end = berserk.utils.to_millis(datetime(today))
+            client.games.export_by_player(player.lichess_username, since=start, until=end,
+                                          max=300)
 
 
 @app.lib.cron()
