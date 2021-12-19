@@ -55,21 +55,35 @@ def create_update_rating_week(players):
         if len(week) == 0:
             previous_weeks = db.fetch({"player": player}).items
             if len(previous_weeks) == 0:
-                week = db.put(Rating_week())
+                today = datetime.date.today()
+                # all weeks start on Mondays
+                start_day = today + \
+                    datetime.timedelta(days=-today.weekday(), weeks=1)
+                week = db.put(Rating_week(
+                    player=player,
+                    week_number=0,  # weeks start at 0
+                    start_day=start_day,
+                    end_day=start_day + datetime.timedelta(days=7),
+                    fide_classical=classical_rating,
+                    fide_rapid=rapid_rating,
+                    fide_blitz=blitz_rating,
+                ))
             else:
                 previous_week = sorted(
                     previous_weeks, key=lambda x: x.week_number, reverse=True)[0]
                 week = db.put(Rating_week(
                     player=player,
                     week_number=previous_week.week_number + 1,
-                    start_day = previous_week.start_day + datetime.timedelta(days=7),
-                    end_day = previous_week.end_day + datetime.timedelta(days=7),
-                    fide_classical = classical_rating,
-                    fide_rapid = rapid_rating,
-                    fide_blitz = blitz_rating,
+                    start_day=previous_week.start_day +
+                    datetime.timedelta(days=7),
+                    end_day=previous_week.end_day + datetime.timedelta(days=7),
+                    fide_classical=classical_rating,
+                    fide_rapid=rapid_rating,
+                    fide_blitz=blitz_rating,
                 ))
         else:
             week = week[0]
+        # requests to lichess, chess, twitch, and youtube
         if not isinstance(player.lichess_username, type(None)):
             r = requests.get()
 

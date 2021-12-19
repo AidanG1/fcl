@@ -72,6 +72,8 @@ class League(BaseModel):
     # each week, the week_count/league_size players with the lowest total scores get eliminated
     week_count: int = 10
     league_size: int = 10
+    # if set to True, this would allow league data to be accessible on the internet
+    # public_api: bool = False
     fide_multiplier: float = 2  # multiplier
     lichess_chess_multiplier: float = 1
     classical_multiplier: float = 12
