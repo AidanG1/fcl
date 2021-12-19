@@ -61,11 +61,17 @@ class Rating_week(BaseModel):  # https://www.chess.com/games/daniel-naroditsky
 class User(BaseModel):
     username: str
 
+# current idea format is for there to be one large match each week
+
 
 class League(BaseModel):
     league_name: str
     league_description: str = ''
-    league_size_limit: int = 10
+    draft_date: datetime.date
+    start_date: datetime.date
+    # each week, the week_count/league_size players with the lowest total scores get eliminated
+    week_count: int = 10
+    league_size: int = 10
     fide_multiplier: float = 2  # multiplier
     lichess_chess_multiplier: float = 1
     classical_multiplier: float = 12
@@ -79,6 +85,7 @@ class Team(BaseModel):
     owner: User
     league: League
     name: str
+    eliminated: bool = False
     players: List[Player]
     starting: List[Player]
     not_starting: List[Player]
